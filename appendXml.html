@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>appendXML</title>
+    <!-- <script src="http://mbostock.github.com/d3/d3.v2.js" type="text/javascript"></script> -->
+    <script src="d3.v2.js" type="text/javascript"></script>
+    <!--<script src="https://raw.github.com/andyet/ICanHaz.js/master/ICanHaz.min.js" type="text/javascript"></script>-->
+    <script src="ICanHaz.min.js" type="text/javascript"></script>
+    <style type="text/css">
+        circle {
+            stroke: #000;
+            stroke-width: 1.5px;
+            fill: #fff;
+        }
+    </style>
+    <script id="circle" type="text/html">
+        <circle r="{{r}}" cx="{{cx}}" cy="{{cy}}" xmlns="http://www.w3.org/2000/svg"></circle>
+    </script>
+
+</head>
+
+<body>
+<script type="text/javascript">
+    //TODOs needs access to data that can be used in templating
+    //TODOs needs to possibly be a function that returns a string or node
+
+    d3.selection.prototype.appendNode = function(node) {
+        return this.select(function() {
+            return this.appendChild(node);
+        });
+    };
+    d3.selection.enter.prototype.appendNode = d3.selection.prototype.appendNode;
+
+    window.onload = function () {
+        var xmlString = ich.circle({r:30, cx:100, cy:90})
+            , parser = new DOMParser()
+            , doc = parser.parseFromString(xmlString, "text/xml")
+            , circle = doc.firstChild;
+        
+        var vis = d3.select('body')
+                .append('svg')
+                .attr('width', 400)
+                .attr('height', 300);
+
+        vis.selectAll('circle')
+            .data([1])
+          .enter()
+            .appendNode(circle);
+    }
+
+    ///////////////
+    //FAKE CODE
+    ///////////////
+    //    var faceFactory = function(face_params) {
+    //        //return svg for a face based upon face_params
+    //    };
+    //    var modifyFace = function(new_face_params) {
+    //        //modify face
+    //    }
+    //
+    //    var getFaceParams = function() {...};
+    //    var faces = getFaceParams();
+    //
+    //    vis.selectAll('g.face')
+    //        .data(faces).enter()
+    //      .appendNode('g.face', faceFactory );
+    //
+    //    setInterval( function() {
+    //        var newFaces = getFaceParams();
+    //        vis.selectAll('g.face')
+    //          .data(newFaces).transition().duration(1000)
+    //            .call(modifyFace);
+    //    },1000);
+</script>
+</body>
+</html>

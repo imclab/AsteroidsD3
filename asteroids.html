@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Asteroids</title>
+    <script src="http://mbostock.github.com/d3/d3.v2.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        Spaceship = function(vis) {
+            //state
+            var _this = this;
+            this.x = 100;//TODO Magic numbers
+            this.y = 100;
+            this.vx = 0;
+            this.vy = 0;
+            this.theta = 0;
+            this.thrust = 0; //1 = forward, -1 = backward
+            this.yaw = 0; //1 or -1 per right hand rule
+
+            //params
+            this.size = 7;
+            this.yaw_per_milli = .1;
+            this.thrust_per_milli = .00005;
+            this.key_delay = 50;
+
+            //global TODO move to asteroids object
+            this.width = parseInt(vis[0][0].getAttribute('width'));
+            this.height = parseInt(vis[0][0].getAttribute('height'));
+
+            window.onkeydown = function(e) {
+                var key = e['keyCode'];
+                switch(key){
+                    case 68://d = yaw left
+                        _this.yaw = 1;
+                        break;
+                    case 65://a = yaw right
+                        _this.yaw = -1;
+                        break;
+                    case 87://w = forward
+                        _this.thrust = 1;
+                        break;
+                    case 83://s = backward
+                        _this.thrust = -1;
+                        break;
+                }
+            };
+
+            window.onkeyup = function(e) {
+                var key = e['keyCode'];
+                switch(key){
+                    case 65://a = yaw left
+                        _this.yaw = 0;
+                        break;
+                    case 68://d = yaw right
+                        _this.yaw = 0;
+                        break;
+                    case 87://w = forward
+                        _this.thrust = 0;
+                        break;
+                    case 83://s = backward
+                        _this.thrust = 0;
+                        break;
+                }
+            };
+						
+            this.ship = vis.append('svg:polygon')
+                //-7,-7 -7,7 14,0
+                .attr('points', -this.size +","+ -this.size  +" "+ -this.size +","+ this.size +" "+ (this.size * 2) +",0");
+        }
+
+        Spaceship.deg2rad = Math.PI/180;
+
+        Spaceship.prototype.redraw = function() {
+            this.ship
+                .data([this])
+                .attr('transform', function(d) { return "translate("+ d.x +" "+ d.y +") rotate(" + d.theta + " 0 0)";});
+            //console.log(('x'+ this.x +' y'+ this.y +' vx'+ this.vx +' vy'+ this.vy +' theta'+ this.theta +' thrust'+ this.thrust +' yaw'+this.yaw).replace(/\.\d*/g,''));
+        }
+
+        Spaceship.prototype.integrate = function(refresh_rate) {
+            if(this.yaw) {
+                this.theta = this.theta + this.yaw*this.yaw_per_milli*refresh_rate;
+            }
+            if(this.thrust) {
+                var del_v = this.thrust*this.thrust_per_milli*refresh_rate;
+                var del_vx = del_v*Math.cos(this.theta*Spaceship.deg2rad);
+                var del_vy = del_v*Math.sin(this.theta*Spaceship.deg2rad);
+            } else {
+                var del_vx = 0;
+                var del_vy = 0;
+            }
+            this.vx = this.vx + del_vx;
+            this.vy = this.vy + del_vy;
+            this.x = this.x + this.vx*refresh_rate;
+            this.y = this.y + this.vy*refresh_rate;
+
+            //clamp
+            if( this.y > this.height ) {
+                this.y = 0;
+            } else if (this.y < 0 ) {
+                this.y = this.height;
+            }
+            if( this.x > this.width ) {
+                this.x = 0;
+            } else if (this.x < 0 ) {
+                this.x = this.width;
+            }
+
+        }
+    </script>
+    <style type="text/css">
+    </style>
+
+</head>
+
+<body>
+<!-- This file lives in public/404.html -->
+<div class="dialog"></div>
+<script type="text/javascript">
+        var vis = d3.select('div')
+                .append('svg:svg')
+                .attr('width', 600)
+                .attr('height', 500);
+        var refresh_rate = 60;
+
+        var s = new Spaceship(vis);
+
+        var refresh = function() {
+            s.integrate(refresh_rate);
+            s.redraw();
+        };
+        setInterval(refresh, refresh_rate);
+</script>
+</body>
+</html>

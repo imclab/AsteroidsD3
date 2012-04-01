@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BoxStem Demo</title>
+    <!-- <script src="http://mbostock.github.com/d3/d3.v2.js" type="text/javascript"></script> -->
+	<script src="d3.v2.min.js" type="text/javascript"></script>
+    <script type="text/javascript">
+    </script>
+    <style type="text/css">
+	.box { font: 10px sans-serif; }
+	.box line, .box rect, .box circle { stroke: #000; stroke-width: 1.5px; fill: #fff; }
+	.box .center { stroke-dasharray: 3 3; }
+	.box .outlier { stroke: #ccc; fill: none; }
+    </style>
+
+</head>
+
+<body>
+	<div id="chart"></div>
+<script type="text/javascript">
+var w = 120,
+    h = 500,
+    m = [10, 50, 20, 50], // top right bottom left
+    min = Infinity,
+    max = -Infinity;
+
+var chart = boxChart()
+    .whiskers(iqr(1.5))
+    .width(w - m[1] - m[3])
+    .height(h - m[0] - m[2]);
+
+ var data = [];
+
+d3.csv.parse("Expt,Run,Speed\n1,1,850\n1,2,740\n1,3,900\n1,4,1070\n1,5,930\n1,6,850\n1,7,950\n1,8,980\n1,9,980\n1,10,880\n1,11,1000\n1,12,980\n1,13,930\n1,14,650\n1,15,760\n1,16,810\n1,17,1000\n1,18,1000\n1,19,960\n1,20,960\n2,1,960\n2,2,940\n2,3,960\n2,4,940\n2,5,880\n2,6,800\n2,7,850\n2,8,880\n2,9,900\n2,10,840\n2,11,830\n2,12,790\n2,13,810\n2,14,880\n2,15,880\n2,16,830\n2,17,800\n2,18,790\n2,19,760\n2,20,800\n3,1,880\n3,2,880\n3,3,880\n3,4,860\n3,5,720\n3,6,720\n3,7,620\n3,8,860\n3,9,970\n3,10,950\n3,11,880\n3,12,910\n3,13,850\n3,14,870\n3,15,840\n3,16,840\n3,17,850\n3,18,840\n3,19,840\n3,20,840\n4,1,890\n4,2,810\n4,3,810\n4,4,820\n4,5,800\n4,6,770\n4,7,760\n4,8,740\n4,9,750\n4,10,760\n4,11,910\n4,12,920\n4,13,890\n4,14,860\n4,15,880\n4,16,720\n4,17,840\n4,18,850\n4,19,850\n4,20,780\n5,1,890\n5,2,840\n5,3,780\n5,4,810\n5,5,760\n5,6,810\n5,7,790\n5,8,810\n5,9,820\n5,10,850\n5,11,870\n5,12,870\n5,13,810\n5,14,740\n5,15,810\n5,16,940\n5,17,950\n5,18,800\n5,19,810\n5,20,870")
+.forEach(function(x) {
+    var e = ~~x.Expt - 1,
+         r = ~~x.Run - 1,
+         s = ~~x.Speed,
+         d = data[e];
+     if (!d) d = data[e] = [s];
+     else d.push(s);
+     if (s > max) max = s;
+      if (s < min) min = s;
+  });
+
+  chart.domain([min, max]);
+
+  var vis = d3.select("#chart").selectAll("svg")
+      .data(data)
+    .enter().append("svg")
+      .attr("class", "box")
+      .attr("width", w)
+      .attr("height", h)
+    .append("g")
+      .attr("transform", "translate(" + m[3] + "," + m[0] + ")")
+      .call(chart);
+
+  chart.duration(1000);
+  window.transition = function() {
+    vis.datum(randomize).call(chart);
+  };
+
+
+function randomize(d) {
+  if (!d.randomizer) d.randomizer = randomizer(d);
+  return d.map(d.randomizer);
+}
+
+function randomizer(d) {
+  var k = d3.max(d) * .02;
+  return function(d) {
+    return Math.max(min, Math.min(max, d + k * (Math.random() - .5)));
+  };
+}
+
+// Returns a function to compute the interquartile range.
+function iqr(k) {
+  return function(d, i) {
+    var q1 = d.quartiles[0],
+        q3 = d.quartiles[2],
+        iqr = (q3 - q1) * k,
+        i = -1,
+        j = d.length;
+    while (d[++i] < q1 - iqr);
+    while (d[--j] > q3 + iqr);
+    return [i, j];
+  };
+}
+
+// Inspired by http://informationandvisualization.de/blog/box-plot
+function boxChart() {
+  var width = 1,
+      height = 1,
+      duration = 0,
+      domain = null,
+      value = Number,
+      whiskers = boxWhiskers,
+      quartiles = boxQuartiles,
+      tickFormat = null;
+
+  // For each small multiple…
+  function box(g) {
+    g.each(function(d, i) {
+      d = d.map(value).sort(d3.ascending);
+      var g = d3.select(this),
+          n = d.length,
+          min = d[0],
+          max = d[n - 1];
+
+      // Compute quartiles. Must return exactly 3 elements.
+      var quartileData = d.quartiles = quartiles(d);
+
+      // Compute whiskers. Must return exactly 2 elements, or null.
+      var whiskerIndices = whiskers && whiskers.call(this, d, i),
+          whiskerData = whiskerIndices && whiskerIndices.map(function(i) { return d[i]; });
+
+      // Compute outliers. If no whiskers are specified, all data are "outliers".
+      // We compute the outliers as indices, so that we can join across transitions!
+      var outlierIndices = whiskerIndices
+          ? d3.range(0, whiskerIndices[0]).concat(d3.range(whiskerIndices[1] + 1, n))
+          : d3.range(n);
+
+      // Compute the new x-scale.
+      var x1 = d3.scale.linear()
+          .domain(domain && domain.call(this, d, i) || [min, max])
+          .range([height, 0]);
+
+      // Retrieve the old x-scale, if this is an update.
+      var x0 = this.__chart__ || d3.scale.linear()
+          .domain([0, Infinity])
+          .range(x1.range());
+
+      // Stash the new scale.
+      this.__chart__ = x1;
+
+      // Note: the box, median, and box tick elements are fixed in number,
+      // so we only have to handle enter and update. In contrast, the outliers
+      // and other elements are variable, so we need to exit them! Variable
+      // elements also fade in and out.
+
+      // Update center line: the vertical line spanning the whiskers.
+      var center = g.selectAll("line.center")
+          .data(whiskerData ? [whiskerData] : []);
+
+      center.enter().insert("svg:line", "rect")
+          .attr("class", "center")
+          .attr("x1", width / 2)
+          .attr("y1", function(d) { return x0(d[0]); })
+          .attr("x2", width / 2)
+          .attr("y2", function(d) { return x0(d[1]); })
+          .style("opacity", 1e-6)
+        .transition()
+          .duration(duration)
+          .style("opacity", 1)
+          .attr("y1", function(d) { return x1(d[0]); })
+          .attr("y2", function(d) { return x1(d[1]); });
+
+      center.transition()
+          .duration(duration)
+          .style("opacity", 1)
+          .attr("y1", function(d) { return x1(d[0]); })
+          .attr("y2", function(d) { return x1(d[1]); });
+
+      center.exit().transition()
+          .duration(duration)
+          .style("opacity", 1e-6)
+          .attr("y1", function(d) { return x1(d[0]); })
+          .attr("y2", function(d) { return x1(d[1]); })
+          .remove();
+
+      // Update innerquartile box.
+      var box = g.selectAll("rect.box")
+          .data([quartileData]);
+
+      box.enter().append("svg:rect")
+          .attr("class", "box")
+          .attr("x", 0)
+          .attr("y", function(d) { return x0(d[2]); })
+          .attr("width", width)
+          .attr("height", function(d) { return x0(d[0]) - x0(d[2]); })
+        .transition()
+          .duration(duration)
+          .attr("y", function(d) { return x1(d[2]); })
+          .attr("height", function(d) { return x1(d[0]) - x1(d[2]); });
+
+      box.transition()
+          .duration(duration)
+          .attr("y", function(d) { return x1(d[2]); })
+          .attr("height", function(d) { return x1(d[0]) - x1(d[2]); });
+
+      // Update median line.
+      var medianLine = g.selectAll("line.median")
+          .data([quartileData[1]]);
+
+      medianLine.enter().append("svg:line")
+          .attr("class", "median")
+          .attr("x1", 0)
+          .attr("y1", x0)
+          .attr("x2", width)
+          .attr("y2", x0)
+        .transition()
+          .duration(duration)
+          .attr("y1", x1)
+          .attr("y2", x1);
+
+      medianLine.transition()
+          .duration(duration)
+          .attr("y1", x1)
+          .attr("y2", x1);
+
+      // Update whiskers.
+      var whisker = g.selectAll("line.whisker")
+          .data(whiskerData || []);
+
+      whisker.enter().insert("svg:line", "circle, text")
+          .attr("class", "whisker")
+          .attr("x1", 0)
+          .attr("y1", x0)
+          .attr("x2", width)
+          .attr("y2", x0)
+          .style("opacity", 1e-6)
+        .transition()
+          .duration(duration)
+          .attr("y1", x1)
+          .attr("y2", x1)
+          .style("opacity", 1);
+
+      whisker.transition()
+          .duration(duration)
+          .attr("y1", x1)
+          .attr("y2", x1)
+          .style("opacity", 1);
+
+      whisker.exit().transition()
+          .duration(duration)
+          .attr("y1", x1)
+          .attr("y2", x1)
+          .style("opacity", 1e-6)
+          .remove();
+
+      // Update outliers.
+      var outlier = g.selectAll("circle.outlier")
+          .data(outlierIndices, Number);
+
+      outlier.enter().insert("svg:circle", "text")
+          .attr("class", "outlier")
+          .attr("r", 5)
+          .attr("cx", width / 2)
+          .attr("cy", function(i) { return x0(d[i]); })
+          .style("opacity", 1e-6)
+        .transition()
+          .duration(duration)
+          .attr("cy", function(i) { return x1(d[i]); })
+          .style("opacity", 1);
+
+      outlier.transition()
+          .duration(duration)
+          .attr("cy", function(i) { return x1(d[i]); })
+          .style("opacity", 1);
+
+      outlier.exit().transition()
+          .duration(duration)
+          .attr("cy", function(i) { return x1(d[i]); })
+          .style("opacity", 1e-6)
+          .remove();
+
+      // Compute the tick format.
+      var format = tickFormat || x1.tickFormat(8);
+
+      // Update box ticks.
+      var boxTick = g.selectAll("text.box")
+          .data(quartileData);
+
+      boxTick.enter().append("svg:text")
+          .attr("class", "box")
+          .attr("dy", ".3em")
+          .attr("dx", function(d, i) { return i & 1 ? 6 : -6 })
+          .attr("x", function(d, i) { return i & 1 ? width : 0 })
+          .attr("y", x0)
+          .attr("text-anchor", function(d, i) { return i & 1 ? "start" : "end"; })
+          .text(format)
+        .transition()
+          .duration(duration)
+          .attr("y", x1);
+
+      boxTick.transition()
+          .duration(duration)
+          .text(format)
+          .attr("y", x1);
+
+      // Update whisker ticks. These are handled separately from the box
+      // ticks because they may or may not exist, and we want don't want
+      // to join box ticks pre-transition with whisker ticks post-.
+      var whiskerTick = g.selectAll("text.whisker")
+          .data(whiskerData || []);
+
+      whiskerTick.enter().append("svg:text")
+          .attr("class", "whisker")
+          .attr("dy", ".3em")
+          .attr("dx", 6)
+          .attr("x", width)
+          .attr("y", x0)
+          .text(format)
+          .style("opacity", 1e-6)
+        .transition()
+          .duration(duration)
+          .attr("y", x1)
+          .style("opacity", 1);
+
+      whiskerTick.transition()
+          .duration(duration)
+          .text(format)
+          .attr("y", x1)
+          .style("opacity", 1);
+
+      whiskerTick.exit().transition()
+          .duration(duration)
+          .attr("y", x1)
+          .style("opacity", 1e-6)
+          .remove();
+    });
+    d3.timer.flush();
+  }
+
+  box.width = function(x) {
+    if (!arguments.length) return width;
+    width = x;
+    return box;
+  };
+
+  box.height = function(x) {
+    if (!arguments.length) return height;
+    height = x;
+    return box;
+  };
+
+  box.tickFormat = function(x) {
+    if (!arguments.length) return tickFormat;
+    tickFormat = x;
+    return box;
+  };
+
+  box.duration = function(x) {
+    if (!arguments.length) return duration;
+    duration = x;
+    return box;
+  };
+
+  box.domain = function(x) {
+    if (!arguments.length) return domain;
+    domain = x == null ? x : d3.functor(x);
+    return box;
+  };
+
+  box.value = function(x) {
+    if (!arguments.length) return value;
+    value = x;
+    return box;
+  };
+
+  box.whiskers = function(x) {
+    if (!arguments.length) return whiskers;
+    whiskers = x;
+    return box;
+  };
+
+  box.quartiles = function(x) {
+    if (!arguments.length) return quartiles;
+    quartiles = x;
+    return box;
+  };
+
+  return box;
+};
+
+function boxWhiskers(d) {
+  return [0, d.length - 1];
+}
+
+function boxQuartiles(d) {
+  return [
+    d3.quantile(d, .25),
+    d3.quantile(d, .5),
+    d3.quantile(d, .75)
+  ];
+}
+
+</script>
+</body>
+</html>
