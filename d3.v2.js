@@ -1571,7 +1571,6 @@ function d3_selection_selectorAll(selector) {
   };
 }
 d3_selectionPrototype.attr = function(name, value) {
-  debugger;
   name = d3.ns.qualify(name);
 
   // If no value is specified, return the first value.

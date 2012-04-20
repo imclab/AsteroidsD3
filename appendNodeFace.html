@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>appendNodeFace</title>
+     <script src="http://mbostock.github.com/d3/d3.v2.js" type="text/javascript"></script>
+    <!--<script src="d3.v2.js" type="text/javascript"></script>-->
+    <script src="https://raw.github.com/andyet/ICanHaz.js/master/ICanHaz.min.js" type="text/javascript"></script>
+    <!--<script src="ICanHaz.min.js" type="text/javascript"></script>-->
+    <style type="text/css">
+        circle {
+            stroke: #000;
+            stroke-width: 1.5px;
+            fill: #fff;
+        }
+    </style>
+    <script id="circle" type="text/html">
+        <circle r="{{r}}" cx="{{cx}}" cy="{{cy}}" xmlns="http://www.w3.org/2000/svg"></circle>
+    </script>
+    <script id="head" type="text/html">
+        <g xmlns="http://www.w3.org/2000/svg"
+             id="head">
+            <path
+               d="M 28.471261,-5.0558794 C 32.671841,22.243131 19.834631,49.162831 0.60952108,49.162831 -18.615599,49.162831 -27.684919,24.667631 -27.053699,-3.0332694 -26.458119,-29.170189 -25.961069,-47.588419 0.21246108,-48.936829 19.417701,-49.926249 24.103691,-33.440159 28.471261,-5.0558794 z"
+               id="face"
+               transform="scale({{head_width}} 1)"
+               style="color:#000000;fill:#ffccaa;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.5;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate" />
+            <path
+               d="m 15,0 c 0,3.7959 -4.91374,13.7461 -12.8383199,13.7461 -7.92458,0 -17.6233801,-10.3065 -15.8591001,-13.7461 1.0069201,-1.9631 7.9345201,0 15.8591001,0 7.9245799,0 12.8383199,-3.7959 12.8383199,0 z"
+               id="mouth"
+               transform="translate(0, {{mouth_drop}}) translate(0,17) scale({{mouth_width}} {{mouth_height}})"
+               style="color:#000000;fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dashoffset:0;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate" />
+            <path
+               d="m -18.009869,-17.276949 c 3.23815,-9.62232 14.5716901,-8.70591 14.5716901,-8.70591"
+               id="rightbrow"
+               transform="translate(0, -{{brow_lift}})"
+               style="color:#000000;fill:none;stroke:#000000;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate" />
+            <path
+               d="m 20.443211,-18.868939 c -3.23815,-9.62232 -14.5716899,-8.70591 -14.5716899,-8.70591"
+               id="leftbrow"
+               transform="translate(0, -{{brow_lift}})"
+               style="color:#000000;fill:none;stroke:#000000;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate" />
+            <path
+               d="m 2.3,0 c 0.90841,1.59522 -1.53169,3.13263 -4.07974,3.51899 -2.5480401,0.38635 -5.4168801,-0.16412 -5.1475501,-2.11987 0.25826,-1.87529 1.62394,-2.35301 4.1719801,-2.73937 2.54805,-0.38636 4.17038,-0.21373 5.05531,1.34025 z"
+               id="righteye"
+               transform="translate(-5,-18) scale({{eye_width}} {{eye_height}})"
+               style="color:#000000;fill:#000000;stroke:#000000;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dashoffset:0;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate" />
+            <path
+               d="m 5.5,0 c 0.90841,1.59522 -1.53169,3.13263 -4.07974,3.51899 -2.5480399,0.38635 -5.4168799,-0.16412 -5.1475499,-2.11987 0.25826,-1.87529 1.62394,-2.35301 4.17198,-2.73937 2.5480499,-0.38636 4.1703899,-0.21373 5.0553099,1.34025 z"
+               id="lefteye"
+               transform="translate(10,-18) scale({{eye_width}} {{eye_height}})"
+               style="color:#000000;fill:#000000;stroke:#000000;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dashoffset:0;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate" />
+            <path
+               d="M -8.1253309,-1.8487371 C -3.740886,13.80696 10.948853,19.556588 10.177223,-2.5578614"
+               id="nose"
+               transform="translate(0, {{nose_drop}}) scale({{nose_width}} {{nose_height}})"
+               style="color:#000000;fill:#ffccaa;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate" />
+          </g>
+
+
+    </script>
+
+</head>
+
+<body>
+<script type="text/javascript">
+    //TODOs needs access to data that can be used in templating
+    //TODOs needs to possibly be a function that returns a string or node
+
+    d3.selection.prototype.appendNode = function(value) {
+
+        function _appendFunction(data,index) {
+            var result = value.call(this, data, index);
+            if( typeof result === "string" ) {
+                var parser = new DOMParser()
+                result = parser.parseFromString(value(data),"text/xml").firstChild
+            }
+            return this.appendChild(result);
+        }
+        function _appendNode() {
+            return this.appendChild(value);
+        }
+        function _appendXml() {
+            var parser = new DOMParser()
+                , doc = parser.parseFromString(value, "text/xml");
+            return this.appendChild(doc.firstChild);
+        }
+
+        var selection;
+        switch(typeof value) {
+            case 'string':
+                selection = this.select(_appendXml);
+                break;
+            case 'function':
+                selection = this.select(_appendFunction);
+                break;
+            default:
+                selection = this.select(_appendNode);
+        }
+
+        return selection;
+    };
+    d3.selection.enter.prototype.appendNode = d3.selection.prototype.appendNode;
+
+    window.onload = function () {
+
+        var w = 500;
+        var h = 550;
+        var vis = d3.select('body')
+            .append('svg')
+            .attr('width', w)
+            .attr('height', h);
+
+        
+        count = 0;
+        var nextData = function() {
+            count += 1;
+            return {
+                head_width: .7*Math.random()+.8, //.8 - 1.5
+                mouth_width: .8*Math.random()+.5, //.5 - 1.3
+                mouth_height: Math.random()+.5, //.5 - 1.5
+                mouth_drop: 15*Math.random()-5, //-5 - 10
+                nose_width: Math.random()+.5, //.5 - 1.5
+                nose_height: Math.random()+.5, // .5 - 1.5
+                nose_drop: 15*Math.random()-5, // -5 - 10
+                eye_width: .8*Math.random()+.5, //.5 - 1.3
+                eye_height: 1.1*Math.random()+.4,//.4 - 1.5
+                brow_lift: 10*Math.random(), //0 - 10
+                x: w*(count%5+1)/5 - 45 ,
+                y: h*.95*Math.ceil(count/5)/4.9 - 50
+            };
+        }
+        var data = d3.range(25).map(function() {
+            return nextData();
+        });
+
+        vis.selectAll('#head')
+            .data(data).enter()
+            .appendNode(ich.head )
+                .attr('transform',function(d) {return 'translate('+ d.x +' '+ d.y +')'});
+
+    }
+
+    </script>
+    </body>
+</html>

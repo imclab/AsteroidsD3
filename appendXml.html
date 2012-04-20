@@ -14,8 +14,9 @@
         }
     </style>
     <script id="circle" type="text/html">
-        <circle r="{{r}}" cx="{{cx}}" cy="{{cy}}" xmlns="http://www.w3.org/2000/svg"></circle>
+        <g xmlns="http://www.w3.org/2000/svg"><circle r="{{r}}" cx="{{cx}}" cy="{{cy}}" ></circle></g>
     </script>
+   
 
 </head>
 
@@ -24,53 +25,74 @@
     //TODOs needs access to data that can be used in templating
     //TODOs needs to possibly be a function that returns a string or node
 
-    d3.selection.prototype.appendNode = function(node) {
-        return this.select(function() {
-            return this.appendChild(node);
-        });
+
+    
+    d3.selection.prototype.appendNode = function(value) {
+
+        function _appendFunction(data,index) {
+            var result = value.call(this, data, index);
+            if( typeof result === "string" ) {
+                var parser = new DOMParser()
+                result = parser.parseFromString(value(data),"text/xml").firstChild
+            }
+            return this.appendChild(result);
+        }
+        function _appendNode() {
+            return this.appendChild(value);
+        }
+        function _appendXml() {
+            var parser = new DOMParser()
+                , doc = parser.parseFromString(value, "text/xml");
+            return this.appendChild(doc.firstChild);
+        }
+
+        var selection;
+        switch(typeof value) {
+            case 'string':
+                selection = this.select(_appendXml);
+                break;
+            case 'function':
+                selection = this.select(_appendFunction);
+                break;
+            default:
+                selection = this.select(_appendNode);
+        }
+
+        return selection;
     };
     d3.selection.enter.prototype.appendNode = d3.selection.prototype.appendNode;
 
+
+
+
+
+    
     window.onload = function () {
-        var xmlString = ich.circle({r:30, cx:100, cy:90})
+        var circle_xml = ich.circle({r:20, cx:100, cy:90})
+         
+        var circle_xml2 = ich.circle({r:40, cx:100, cy:90})
             , parser = new DOMParser()
-            , doc = parser.parseFromString(xmlString, "text/xml")
-            , circle = doc.firstChild;
+            , doc = parser.parseFromString(circle_xml2, "text/xml")
+            , circle_node = doc.firstChild;
+
+		console.log(circle_xml);
+		console.log(circle_node);
         
         var vis = d3.select('body')
-                .append('svg')
-                .attr('width', 400)
-                .attr('height', 300);
-
-        vis.selectAll('circle')
-            .data([1])
+            .append('svg')
+            .attr('width', 400)
+            .attr('height', 300);
+        
+        vis.selectAll('g')
+            .data([{r:60, cx:100, cy:90}])
           .enter()
-            .appendNode(circle);
+            .appendNode(ich.circle);
+
+		vis.appendNode(circle_xml);
+		vis.appendNode(circle_node);
+		
     }
 
-    ///////////////
-    //FAKE CODE
-    ///////////////
-    //    var faceFactory = function(face_params) {
-    //        //return svg for a face based upon face_params
-    //    };
-    //    var modifyFace = function(new_face_params) {
-    //        //modify face
-    //    }
-    //
-    //    var getFaceParams = function() {...};
-    //    var faces = getFaceParams();
-    //
-    //    vis.selectAll('g.face')
-    //        .data(faces).enter()
-    //      .appendNode('g.face', faceFactory );
-    //
-    //    setInterval( function() {
-    //        var newFaces = getFaceParams();
-    //        vis.selectAll('g.face')
-    //          .data(newFaces).transition().duration(1000)
-    //            .call(modifyFace);
-    //    },1000);
 </script>
 </body>
 </html>
